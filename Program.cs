@@ -43,6 +43,9 @@ namespace Crypto3
                     case "4":
                         DigitalSignature();
                         break;
+                    case "0":
+                        Environment.Exit(0);
+                        break;
                 }
             }
         }
@@ -57,6 +60,9 @@ namespace Crypto3
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Шифрование документа симметричным криптоалгоритмом
+        /// </summary>
         private static void SimmetricCryptography()
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
