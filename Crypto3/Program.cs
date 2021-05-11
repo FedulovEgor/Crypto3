@@ -1,10 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Crypto3
 {
     class Program
     {
+        static byte[] rsaPublicKey;
+        static byte[] rsaPriveteKey;
+
+        [STAThread]
         static void Main()
         {
             Menu();
@@ -12,14 +21,15 @@ namespace Crypto3
 
         private static void Menu()
         {
-            Console.WriteLine("Выберите действие:" +
-                "1 - Генерация ключей RSA" +
-                "2 - Шифрование и расшифрование документа симметричным криптоалгоритмом" +
-                "3 - Шифрование и расшифрование сеансового ключа симметричного алгоритма при помощи ключей RSA" +
-                "4 - Формирование и проверку цифровой подписи документа" +
+            Console.WriteLine("Выберите действие:\n" +
+                "1 - Генерация ключей RSA\n" +
+                "2 - Шифрование и расшифрование документа симметричным криптоалгоритмом\n" +
+                "3 - Шифрование и расшифрование сеансового ключа симметричного алгоритма при помощи ключей RSA\n" +
+                "4 - Формирование и проверку цифровой подписи документа\n" +
                 "0 - Выход\n");
             while (true)
             {
+                Console.Write("--> ");
                 switch (Console.ReadLine())
                 {
                     case "1":
@@ -50,12 +60,37 @@ namespace Crypto3
 
         private static void SimmetricCryptography()
         {
-            throw new NotImplementedException();
+            OpenFileDialog openFileDialog = new OpenFileDialog();
         }
 
+        /// <summary>
+        /// Генерация ключевой пары RSA
+        /// </summary>
         private static void GenerateRSAKey()
         {
-            throw new NotImplementedException();
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
+            {
+                rsaPublicKey = rsa.ExportCspBlob(false);
+                rsaPriveteKey = rsa.ExportCspBlob(true);
+            }
+
+            StringBuilder keysToString = new StringBuilder();
+            keysToString.AppendLine("Открытый ключ: ");
+
+            foreach (var el in rsaPublicKey)
+            {
+                keysToString.Append(el);
+            }
+
+            keysToString.AppendLine("\nЗакрытый ключ: ");
+
+            foreach (var el in rsaPriveteKey)
+            {
+                keysToString.Append(el);
+            }
+
+            Console.WriteLine("Ключи сгенерированы");
+            Console.WriteLine(keysToString.ToString());
         }
 
         public static byte[] EncryptionRSA(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
