@@ -9,269 +9,130 @@ using System.Windows.Forms;
 
 namespace Crypto3
 {
+    static class User1
+    {
+        public static RSAParameters publicSignedKey;
+        public static byte[] encryptedSimmetricKey;
+
+
+        public static void StartCrypto()
+        {
+            Aes aes = Aes.Create();
+            RSA rsa = RSA.Create();
+            rsa.ImportParameters(User2.publicKey);
+            encryptedSimmetricKey = rsa.Encrypt(aes.Key, RSAEncryptionPadding.Pkcs1);
+
+            using (OpenFileDialog file = new OpenFileDialog())
+            {
+                file.Filter = "Текстовые файлы(*.txt)|*.txt|Все файлы(*.*)|*.*";
+
+                if (file.ShowDialog() == DialogResult.OK)
+                {
+                    string content = File.ReadAllText(file.FileName);
+                    SendToUser(aes.Key, content, out byte[] encryptedMessage, out byte[] IV, out byte[] signedEncryptedMessage);
+                    User2.RecieveData(encryptedMessage, IV, signedEncryptedMessage);
+                }
+            }
+        }
+
+        private static void SendToUser(byte[] key, string content, out byte[] encryptedMessage, out byte[] iV, out byte[] signedEncryptedMessage)
+        {
+            Aes aes = Aes.Create();
+            aes.Key = key;
+            iV = aes.IV;
+
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                using (CryptoStream cryptoStream = new CryptoStream(memoryStream,
+                                                                    aes.CreateEncryptor(),
+                                                                    CryptoStreamMode.Write))
+                {
+                    byte[] message = Encoding.UTF8.GetBytes(content);
+                    cryptoStream.Write(message, 0, message.Length);
+                }
+                encryptedMessage = memoryStream.ToArray();
+                RSA signedRsa = RSA.Create();
+                publicSignedKey = signedRsa.ExportParameters(false);
+                signedEncryptedMessage = signedRsa.SignData(encryptedMessage, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            }
+        }
+    }
+    static class User2
+    {
+        public static RSAParameters publicKey;
+        static RSAParameters privateKey;
+        static byte[] simmetricKey;
+
+        static User2()
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Был вызван статический конструктор!");
+            Console.ResetColor();
+
+            RSA rsa = RSA.Create();
+            privateKey = rsa.ExportParameters(true);
+            publicKey = rsa.ExportParameters(false);
+        }
+
+        internal static void RecieveData(byte[] encryptedMessage, byte[] iV, byte[] signedEncryptedMessage)
+        {
+            RSA signedRsa = RSA.Create();
+            signedRsa.ImportParameters(User1.publicSignedKey);
+
+            if (signedRsa.VerifyData(encryptedMessage, signedEncryptedMessage,
+                                    HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Цифровая подпись проверена!");
+                Console.ResetColor();
+
+                Aes aes = Aes.Create();
+                RSA rsa = RSA.Create();
+
+                rsa.ImportParameters(privateKey);
+                simmetricKey = rsa.Decrypt(User1.encryptedSimmetricKey, RSAEncryptionPadding.Pkcs1);
+                aes.Key = simmetricKey;
+                aes.IV = iV;
+
+                using (MemoryStream memoryStream = new MemoryStream())
+                {
+                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream,
+                                                                        aes.CreateDecryptor(),
+                                                                        CryptoStreamMode.Write))
+                    {
+                        cryptoStream.Write(encryptedMessage, 0, encryptedMessage.Length);
+                    }
+                    string message = Encoding.UTF8.GetString(memoryStream.ToArray());
+
+                    using (SaveFileDialog file = new SaveFileDialog())
+                    {
+                        file.Filter = "Текстовые файлы(*.txt)|*.txt";
+                        file.FileName = "Расшифрованные данные";
+                        file.DefaultExt = "txt";
+
+                        if (file.ShowDialog() == DialogResult.OK)
+                        {
+                            File.WriteAllText(file.FileName, message);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Цифровая подпись не проверена!");
+                Console.ResetColor();
+            }
+        }
+    }
     class Program
     {
-        static byte[] rsaPublicKey;
-        static byte[] rsaPriveteKey;
-
         [STAThread] // Означает, что все потоки в этой программе выполняются в рамках одного процесса,
                     // а управление программой осуществляется одним главным потоком
         static void Main()
         {
-            Menu();
-        }
-
-        private static void Menu()
-        {
-            while (true)
-            {
-                Console.Write("1 - Генерация ключей RSA\n" +
-                                "2 - Шифрование и расшифрование документа симметричным криптоалгоритмом\n" +
-                                "3 - Шифрование и расшифрование сеансового ключа симметричного алгоритма при помощи ключей RSA\n" +
-                                "4 - Формирование и проверку цифровой подписи документа\n" +
-                                "0 - Выход\n" +
-                                "--> ");
-                switch (Console.ReadLine())
-                {
-                    case "1":
-                        GenerateRSAKey();
-                        break;
-                    case "2":
-                        SimmetricCryptography();
-                        break;
-                    case "3":
-                        SimmetricSeanseKeyRSA();
-                        break;
-                    case "4":
-                        DigitalSignature();
-                        break;
-                    case "0":
-                        Environment.Exit(0);
-                        break;
-                }
-            }
-        }
-
-        private static void DigitalSignature()
-        {
-            throw new NotImplementedException();
-        }
-
-        private static void SimmetricSeanseKeyRSA()
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Шифрование и расшифрование документа симметричным криптоалгоритмом (Aes256)
-        /// </summary>
-        private static void SimmetricCryptography()
-        {
-            Aes aes = Aes.Create();
-
-            StringBuilder key = new StringBuilder();
-            foreach (var el in aes.Key)
-            {
-                key.Append(el);
-            }
-
-            StringBuilder iv = new StringBuilder();
-            foreach (var el in aes.IV)
-            {
-                iv.Append(el);
-            }
-
-
-            Console.WriteLine($"Создан ключ для симметричного шифрования {key} и вектор инициализации {iv}" +
-                $"\nЕсли Вы покините это меню, то при следующем заходе ключи будут сгенерированы заново");
-            while (true)
-            {
-                Console.Write("1 - Зашифровать файл\n" +
-                            "2 - Расшифровать файл\n" +
-                            "0 - Назад\n" +
-                            "--> ");
-                switch (Console.ReadLine())
-                {
-                    case "1":
-                        SimmetricEncrypt(aes);
-                        break;
-                    case "2":
-                        SimmetricDecrypt(aes);
-                        break;
-                    case "0":
-                        return;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Расшифрование документа симметричным алгоритмом
-        /// </summary>
-        /// <param name="aes">Объект класса Aes, содержащий ключ шифрования и вектор инициализации</param>
-        private static void SimmetricDecrypt(Aes aes)
-        {
-            using (OpenFileDialog file = new OpenFileDialog())
-            {
-                file.Filter = "Текстовые файлы(*.txt)|*.txt|Все файлы(*.*)|*.*";
-
-                if (file.ShowDialog() == DialogResult.OK)
-                {
-                    string result;
-                    byte[] fileContent = File.ReadAllBytes(file.FileName);  // Считываем шифротекст из файла
-                    ICryptoTransform cryptoTransform = aes.CreateDecryptor(aes.Key, aes.IV);  // Создаем объект дешифровщика
-
-                    using (MemoryStream memoryStream = new MemoryStream(fileContent))  // Поток памяти для записи результата
-                    {
-                        using (CryptoStream cryptoStream = new CryptoStream(memoryStream, 
-                                                                            cryptoTransform, 
-                                                                            CryptoStreamMode.Read))  // Поток, который будет передавать шифротекст дешифровальщику с последующим расшифрованием
-                        {
-                            using(StreamReader streamReader = new StreamReader(cryptoStream))  // Объект, который будет передавать шифротекст потоку для дешифрования
-                            {
-                                result = streamReader.ReadToEnd();
-                            }
-                        }
-                    }
-
-                    using (SaveFileDialog saveFile = new SaveFileDialog())
-                    {
-                        saveFile.Filter = "Текстовые файлы(*.txt)|*.txt|Все файлы(*.*)|*.*";
-                        saveFile.FileName = "Расшифрованные данные";
-                        saveFile.DefaultExt = "txt";
-
-                        if (saveFile.ShowDialog() == DialogResult.OK)
-                        {
-                            //File.WriteAllText(file.FileName, result.ToString());
-                            File.WriteAllText(saveFile.FileName, result);  // Записываем расшифрованный текст в файл
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Шифрование документа симметричным алгоритмом
-        /// </summary>
-        /// <param name="aes">Объект класса Aes, содержащий ключ шифрования и вектор инициализации</param>
-        private static void SimmetricEncrypt(Aes aes)
-        {
-            using (OpenFileDialog file = new OpenFileDialog())
-            {
-                file.Filter = "Текстовые файлы(*.txt)|*.txt|Все файлы(*.*)|*.*";
-
-                if (file.ShowDialog() == DialogResult.OK)
-                {
-                    string fileContent = File.ReadAllText(file.FileName);  // Считываем с выбранного файла весь текст
-
-                    byte[] encrypted;
-                    ICryptoTransform cryptoTransform = aes.CreateEncryptor(aes.Key,
-                                                                           aes.IV);  // Создаем объект шифровальщика
-
-                    using (MemoryStream memoryStream = new MemoryStream())  // Поток памяти для записи результата
-                    {
-                        using (CryptoStream cryptoStream = new CryptoStream(memoryStream,
-                                                                            cryptoTransform,
-                                                                            CryptoStreamMode.Write))  // Поток, который будет передавать текст шифровальщику с последующим шифрованием
-                        {
-                            using (StreamWriter streamWriter = new StreamWriter(cryptoStream))  // Объект, который будет передавать символы потоку для шифрования
-                            {
-                                streamWriter.Write(fileContent);
-                            }
-                        }
-
-                        encrypted = memoryStream.ToArray();
-                    }
-
-                    /* StringBuilder result = new StringBuilder();
-                     foreach (var el in encrypted)
-                    {
-                        result.Append(el);
-                    }
-
-                    Console.WriteLine($"Результат шифрования: {result}");*/
-
-                    using (SaveFileDialog saveFile = new SaveFileDialog())
-                    {
-                        saveFile.Filter = "Текстовые файлы(*.txt)|*.txt|Все файлы(*.*)|*.*";
-                        saveFile.FileName = "Файл с шифротекстом";
-                        saveFile.DefaultExt = "txt";
-
-                        if (saveFile.ShowDialog() == DialogResult.OK)
-                        {
-                            //File.WriteAllText(file.FileName, result.ToString());
-                            File.WriteAllBytes(saveFile.FileName, encrypted);  // Записываем зашифрованный текст в файл
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Генерация ключевой пары RSA
-        /// </summary>
-        private static void GenerateRSAKey()
-        {
-            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
-            {
-                rsaPublicKey = rsa.ExportCspBlob(false);
-                rsaPriveteKey = rsa.ExportCspBlob(true);
-            }
-
-            StringBuilder keysToString = new StringBuilder();
-            keysToString.AppendLine("Открытый ключ: ");
-
-            foreach (var el in rsaPublicKey)
-            {
-                keysToString.Append(el);
-            }
-
-            keysToString.AppendLine("\nЗакрытый ключ: ");
-
-            foreach (var el in rsaPriveteKey)
-            {
-                keysToString.Append(el);
-            }
-
-            Console.WriteLine("Ключи сгенерированы");
-            Console.WriteLine(keysToString.ToString());
-        }
-
-        public static byte[] EncryptionRSA(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
-        {
-            try
-            {
-                byte[] encryptedData;
-                using (RSACryptoServiceProvider RSA = new RSACryptoServiceProvider())
-                {
-                    RSA.ImportParameters(RSAKey);
-                    encryptedData = RSA.Encrypt(Data, DoOAEPPadding);
-                }
-                return encryptedData;
-            }
-            catch (CryptographicException e)
-            {
-                Console.WriteLine(e.Message);
-                return null;
-            }
-        }
-
-        public static byte[] DecryptionRSA(byte[] Data, RSAParameters RSAKey, bool DoOAEPPadding)
-        {
-            try
-            {
-                byte[] decryptedData;
-                using (RSACryptoServiceProvider RSA = new RSACryptoServiceProvider())
-                {
-                    RSA.ImportParameters(RSAKey);
-                    decryptedData = RSA.Decrypt(Data, DoOAEPPadding);
-                }
-                return decryptedData;
-            }
-            catch (CryptographicException e)
-            {
-                Console.WriteLine(e.ToString());
-                return null;
-            }
+            User1.StartCrypto();
         }
     }
 }
+
