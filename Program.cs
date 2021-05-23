@@ -65,10 +65,6 @@ namespace Crypto3
 
         static User2()
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Был вызван статический конструктор!");
-            Console.ResetColor();
-
             RSA rsa = RSA.Create();
             privateKey = rsa.ExportParameters(true);
             publicKey = rsa.ExportParameters(false);
