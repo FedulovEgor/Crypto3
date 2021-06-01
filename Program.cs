@@ -124,7 +124,7 @@ namespace Crypto3
     class Program
     {
         public static Aes uploadedAes = Aes.Create();
-        public static RSA uploadedRSA = RSA.Create();
+        public static RSACryptoServiceProvider uploadedRSA = new RSACryptoServiceProvider();
 
         [STAThread] // Означает, что все потоки в этой программе выполняются в рамках одного процесса,
                     // а управление программой осуществляется одним главным потоком
@@ -171,7 +171,18 @@ namespace Crypto3
 
         private static void UploadRSAKeys()
         {
-            throw new NotImplementedException();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Загрузка сеансового ключа...");
+
+            using (OpenFileDialog rsaKeys = new OpenFileDialog())
+            {
+                rsaKeys.Filter = "Ключи RSA(*.xml)|*.xml";
+
+                if (rsaKeys.ShowDialog() == DialogResult.OK)
+                {
+                    uploadedRSA = uploadedRSA.FromXmlString(File.ReadAllText(rsaKeys.FileName));
+                }
+            }
         }
 
         private static void UploadSessionKey()
@@ -211,29 +222,17 @@ namespace Crypto3
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Генерация сеансового ключа...");
 
-            using (RSA rsa = RSA.Create())
+            using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
             {
-                using (SaveFileDialog rsaPublicKey = new SaveFileDialog())
+                using (SaveFileDialog rsaKeys = new SaveFileDialog())
                 {
-                    rsaPublicKey.Filter = "Открытый ключ RSA(*.rsaPublic)|*.rsaPublic";
-                    rsaPublicKey.FileName = "Открытый ключ RSA";
-                    rsaPublicKey.DefaultExt = "rsaPublic";
+                    rsaKeys.Filter = "Ключи RSA(*.xml)|*.xml";
+                    rsaKeys.FileName = "Ключи RSA";
+                    rsaKeys.DefaultExt = "xml";
 
-                    if (rsaPublicKey.ShowDialog() == DialogResult.OK)
+                    if (rsaKeys.ShowDialog() == DialogResult.OK)
                     {
-                        File.WriteAllText(rsaPublicKey.FileName, rsa.ExportParameters(false).ToString());
-                    }
-                }
-
-                using (SaveFileDialog rsaPrivateKey = new SaveFileDialog())
-                {
-                    rsaPrivateKey.Filter = "Закрытый ключ RSA(*.rsaPrivate)|*.rsaPrivate";
-                    rsaPrivateKey.FileName = "Закрытый ключ RSA";
-                    rsaPrivateKey.DefaultExt = "rsaPrivate";
-
-                    if (rsaPrivateKey.ShowDialog() == DialogResult.OK)
-                    {
-                        File.WriteAllText(rsaPrivateKey.FileName, rsa.ExportParameters(true).ToString());
+                        File.WriteAllText(rsaKeys.FileName, rsa.ToXmlString(true));
                     }
                 }
             }

@@ -1,1 +1,10 @@
-System.Security.Cryptography.RSAParameters
+<RSAKeyValue>
+<Modulus>qVkxxPhWv/oCkkINiQmR/lBhXa80RmB7byVGfjlAuUWyWgAJWM9RgWhZzj9s01dhkpSKS8GAC6jR5W+2ToaNPqYxDYGQ2b0/06JvvRnoLgdlS5zXpf+xZYycuvjDMIa6zHtIt2HHVD4Nl/q+GBIn4jopkAZCycwuUKYg0Za2/Jk=</Modulus>
+<Exponent>AQAB</Exponent>
+<P>xAe0gG6SGyx/v1CyIo4cSLZhkfCc0c5T3eSo7wdu6NJg4Er56BdfXkzI98QGq2Srk4SgiPL/Knv+Xncfeift5w==</P>
+<Q>3Sfi7rfiBcMPgL22H3sqsqwTlka9bozNMzlKFRf7SQAP2Omf5AsvG0igUF3K7ursinXB1rlY7F4xRA2CjVNxfw==</Q>
+<DP>EwhYexvBLcg9Qvr3wKkhj+G9SWkeILSyqdmYmVSUbSB37W76IpGaXdKAtKWgrCVjDziSSZmmMp7FTLCuKrMTww==</DP>
+<DQ>TMmDlsVL+hovMNEuAiI+wgjTSDNJpK/Is8dpfId2HXOjDPqZJJHpijyeRSk7w9bXyH94jTiPsopF6s4SDUXyuw==</DQ>
+<InverseQ>TMWysWF9Y4krrH+p/1d6kPylLc31kQqMJIXCJM4qAxqYXGKaZqiYxPbmBNbt96aaN1Epf6wmoW7oHGjwKOqgpA==</InverseQ>
+<D>eK+xEU9t+1h/1p2uKbghTB0alnpTBciijt4As9m3b5Hk/dDC2IC+9DtarOp0ctT2G1EykbRvvV9tXlZTlPi81PypQuzy2EEizulRtfY1y3C64Pyyc+kC4MEl4/hLcv91rFbOoRrRF4Phpl3xkyK7iG03jhAHbTetoe2BtD8eW/U=</D>
+</RSAKeyValue>
