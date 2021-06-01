@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace Crypto3
 {
-    static class User1
+    /*static class User1
     {
         public static RSAParameters publicSignedKey;
         public static byte[] encryptedSimmetricKey;
@@ -120,14 +120,164 @@ namespace Crypto3
                 Console.ResetColor();
             }
         }
-    }
+    }*/
     class Program
     {
+        public static Aes uploadedAes = Aes.Create();
+        public static RSA uploadedRSA = RSA.Create();
+
         [STAThread] // Означает, что все потоки в этой программе выполняются в рамках одного процесса,
                     // а управление программой осуществляется одним главным потоком
         static void Main()
         {
-            User1.StartCrypto();
+            while (true)
+            {
+                Console.Write("Выберите действие:\n" +
+                                "1 - Сгенерировать сеансовый ключ и сохранить его в файл\n" +
+                                "2 - Сгенерировать ключи RSA и сохранить его в файл\n" +
+                                "3 - Загрузить сеансовый ключ из файла\n" +
+                                "4 - Загрузить ключи RSA из файла\n" +
+                                "5 - Запустить криптосистему\n" +
+                                "0 - Выход\n" +
+                                "--> ");
+                switch (Console.ReadLine())
+                {
+                    case "1":
+                        GenerateSessionKey();
+                        break;
+                    case "2":
+                        GenerateRSAKeys();
+                        break;
+                    case "3":
+                        UploadSessionKey();
+                        break;
+                    case "4":
+                        UploadRSAKeys();
+                        break;
+                    case "5":
+                        StartCryptosystem();
+                        break;
+                    case "0":
+                        Environment.Exit(0);
+                        break;
+                }
+            }
+        }
+
+        private static void StartCryptosystem()
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void UploadRSAKeys()
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void UploadSessionKey()
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Загрузка сеансового ключа...");
+
+            using (OpenFileDialog aesKeyFile = new OpenFileDialog())
+            {
+                aesKeyFile.Filter = "Ключ Aes(*.aesKey)|*.aesKey";
+
+                if (aesKeyFile.ShowDialog() == DialogResult.OK)
+                {
+                    uploadedAes.Key = File.ReadAllBytes(aesKeyFile.FileName);
+                }
+            }
+
+            using (OpenFileDialog aesIVFile = new OpenFileDialog())
+            {
+                aesIVFile.Filter = "Вектор инициализации Aes(*.aesIV)|*.aesIV";
+
+                if (aesIVFile.ShowDialog() == DialogResult.OK)
+                {
+                    uploadedAes.IV = File.ReadAllBytes(aesIVFile.FileName);
+                }
+            }
+
+            Console.WriteLine("Загрузка окончена");
+            Console.ResetColor();
+        }
+
+        private static void GenerateRSAKeys()
+        {
+            //privateKey = rsa.ExportParameters(true);
+            //publicKey = rsa.ExportParameters(false);
+
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Генерация сеансового ключа...");
+
+            using (RSA rsa = RSA.Create())
+            {
+                using (SaveFileDialog rsaPublicKey = new SaveFileDialog())
+                {
+                    rsaPublicKey.Filter = "Открытый ключ RSA(*.rsaPublic)|*.rsaPublic";
+                    rsaPublicKey.FileName = "Открытый ключ RSA";
+                    rsaPublicKey.DefaultExt = "rsaPublic";
+
+                    if (rsaPublicKey.ShowDialog() == DialogResult.OK)
+                    {
+                        File.WriteAllText(rsaPublicKey.FileName, rsa.ExportParameters(false).ToString());
+                    }
+                }
+
+                using (SaveFileDialog rsaPrivateKey = new SaveFileDialog())
+                {
+                    rsaPrivateKey.Filter = "Закрытый ключ RSA(*.rsaPrivate)|*.rsaPrivate";
+                    rsaPrivateKey.FileName = "Закрытый ключ RSA";
+                    rsaPrivateKey.DefaultExt = "rsaPrivate";
+
+                    if (rsaPrivateKey.ShowDialog() == DialogResult.OK)
+                    {
+                        File.WriteAllText(rsaPrivateKey.FileName, rsa.ExportParameters(true).ToString());
+                    }
+                }
+            }
+
+
+            Console.WriteLine("Генерация окончена");
+            Console.ResetColor();
+        }
+
+        private static void GenerateSessionKey()
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("Генерация сеансового ключа...");
+
+            using (Aes aes = Aes.Create())
+            {
+                using (SaveFileDialog aesKeyFile = new SaveFileDialog())
+                {
+                    aesKeyFile.Filter = "Ключ Aes(*.aesKey)|*.aesKey";
+                    aesKeyFile.FileName = "Ключ Aes";
+                    aesKeyFile.DefaultExt = "aesKey";
+
+                    if (aesKeyFile.ShowDialog() == DialogResult.OK)
+                    {
+                        File.WriteAllBytes(aesKeyFile.FileName, aes.Key);
+                    }
+                }
+
+                using (SaveFileDialog aesIVFile = new SaveFileDialog())
+                {
+                    aesIVFile.Filter = "Вектор инициализации Aes(*.aesIV)|*.aesIV";
+                    aesIVFile.FileName = "Вектор инициализации Aes";
+                    aesIVFile.DefaultExt = "aesIV";
+
+                    if (aesIVFile.ShowDialog() == DialogResult.OK)
+                    {
+                        File.WriteAllBytes(aesIVFile.FileName, aes.Key);
+                    }
+                }
+            }
+
+
+            Console.WriteLine("Генерация окончена");
+            Console.ResetColor();
         }
     }
 }
