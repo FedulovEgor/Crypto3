@@ -7,10 +7,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 
 namespace Crypto3
 {
-    /*static class User1
+    static class User1
     {
         public static RSAParameters publicSignedKey;
         public static byte[] encryptedSimmetricKey;
@@ -64,14 +65,13 @@ namespace Crypto3
         static RSAParameters privateKey;
         static byte[] simmetricKey;
 
-        static User2()
+        public static void UploadRSA()
         {
-            RSA rsa = RSA.Create();
-            privateKey = rsa.ExportParameters(true);
-            publicKey = rsa.ExportParameters(false);
+            privateKey = Program.uploadedRSA.ExportParameters(true);
+            publicKey = Program.uploadedRSA.ExportParameters(false);
         }
 
-        internal static void RecieveData(byte[] encryptedMessage, byte[] iV, byte[] signedEncryptedMessage)
+        public static void RecieveData(byte[] encryptedMessage, byte[] iV, byte[] signedEncryptedMessage)
         {
             RSA signedRsa = RSA.Create();
             signedRsa.ImportParameters(User1.publicSignedKey);
@@ -121,11 +121,14 @@ namespace Crypto3
                 Console.ResetColor();
             }
         }
-    }*/
+    }
+
     class Program
     {
         public static Aes uploadedAes = Aes.Create("AES");
         public static RSA uploadedRSA = RSA.Create();
+
+        public static string BynaryWriter { get; private set; }
 
         [STAThread] // Означает, что все потоки в этой программе выполняются в рамках одного процесса,
                     // а управление программой осуществляется одним главным потоком
