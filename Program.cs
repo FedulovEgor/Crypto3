@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -123,8 +124,8 @@ namespace Crypto3
     }*/
     class Program
     {
-        public static Aes uploadedAes = Aes.Create();
-        public static RSACryptoServiceProvider uploadedRSA = new RSACryptoServiceProvider();
+        public static Aes uploadedAes = Aes.Create("AES");
+        public static RSA uploadedRSA = RSA.Create();
 
         [STAThread] // Означает, что все потоки в этой программе выполняются в рамках одного процесса,
                     // а управление программой осуществляется одним главным потоком
@@ -180,9 +181,13 @@ namespace Crypto3
 
                 if (rsaKeys.ShowDialog() == DialogResult.OK)
                 {
-                    uploadedRSA = uploadedRSA.FromXmlString(File.ReadAllText(rsaKeys.FileName));
+
+                    uploadedRSA.FromXmlString(File.ReadAllText(rsaKeys.FileName));
                 }
             }
+
+            Console.WriteLine("Загрузка окончена");
+            Console.ResetColor();
         }
 
         private static void UploadSessionKey()
@@ -216,9 +221,6 @@ namespace Crypto3
 
         private static void GenerateRSAKeys()
         {
-            //privateKey = rsa.ExportParameters(true);
-            //publicKey = rsa.ExportParameters(false);
-
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Генерация сеансового ключа...");
 
@@ -237,7 +239,6 @@ namespace Crypto3
                 }
             }
 
-
             Console.WriteLine("Генерация окончена");
             Console.ResetColor();
         }
@@ -247,7 +248,7 @@ namespace Crypto3
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Генерация сеансового ключа...");
 
-            using (Aes aes = Aes.Create())
+            using (Aes aes = Aes.Create("AES"))
             {
                 using (SaveFileDialog aesKeyFile = new SaveFileDialog())
                 {
@@ -273,7 +274,6 @@ namespace Crypto3
                     }
                 }
             }
-
 
             Console.WriteLine("Генерация окончена");
             Console.ResetColor();
